@@ -17,8 +17,8 @@ const io = new Server(server, {
 });
 
 const db = createClient({
-    url: "libsql://my-db-fvaldez29.turso.io",
-    authToken: process.env.DB_TOKEN
+  url: "libsql://my-db-fvaldez29.turso.io",
+  authToken: process.env.DB_TOKEN
 })
 await db.execute(`
   CREATE TABLE IF NOT EXISTS messages (
@@ -38,16 +38,16 @@ io.on("connection", async (socket) => {
   socket.on('chat message', async (msg) => {
     let result
     let username = socket.handshake.auth.username ?? 'anonymous'
-    try{
-        
+    try {
 
-        result = await db.execute({
-            sql: 'INSERT INTO messages (content, username) VALUES (:msg, :username)',
-            args: { msg, username }
-        })
-    } catch(e){
-        console.error('error a insertar los datos ', e)
-        return;
+
+      result = await db.execute({
+        sql: 'INSERT INTO messages (content, username) VALUES (:msg, :username)',
+        args: { msg, username }
+      })
+    } catch (e) {
+      console.error('error a insertar los datos ', e)
+      return;
     }
 
     io.emit('chat message', msg, result.lastInsertRowid.toString(), username)
@@ -55,19 +55,19 @@ io.on("connection", async (socket) => {
   console.log('auth...')
   console.log(socket.handshake.auth)
 
-  if(!socket.recovered){
-    try{
-        const results = await db.execute({
-            sql: 'SELECT id, content, username FROM messages WHERE id > ?',
-            args: [socket.handshake.auth.serverOffset ?? 0]
-        })
+  if (!socket.recovered) {
+    try {
+      const results = await db.execute({
+        sql: 'SELECT id, content, username FROM messages WHERE id > ?',
+        args: [socket.handshake.auth.serverOffset ?? 0]
+      })
 
-        results.rows.forEach(row => {
-            socket.emit('chat message', row.content, row.id.toString(), row.username)
-        })
-    } catch(err){
-        console.error(err)
-        return;
+      results.rows.forEach(row => {
+        socket.emit('chat message', row.content, row.id.toString(), row.username)
+      })
+    } catch (err) {
+      console.error(err)
+      return;
     }
   }
 
